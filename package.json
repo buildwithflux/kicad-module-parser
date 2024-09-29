@@ -19,16 +19,19 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "yarn build:module && yarn build:symbol && yarn build:package",
+    "build": "run-s build:module build:symbol build:package",
     "build:module": "npx pegjs -o src/module-parser.js  --allowed-start-rules module,board ./src/module.pegjs",
     "build:symbol": "npx pegjs -o src/symbol-parser.js  --allowed-start-rules kicad_symbol_lib ./src/symbol.pegjs",
     "build:package": "tsup",
-    "build:tests": "tsc -p ./test",
-    "watch": "npx nodemon",
-    "test": "yarn build:tests && node test/",
-    "test:symbols": "yarn build:tests && node test/symbol-test.ts", 
-    "test:modules": "yarn build:tests && node test/module-test.ts", 
-    "test:boards": "yarn build:tests && node test/board-test.ts"
+    "check": "tsc -b -noEmit",
+    "clean": "rm -rf lib dist",
+    "watch": "run-p watch:package watch:test",
+    "watch:package": "tsup --watch",
+    "watch:test": "tsx watch --clear-screen=false ./test/index.ts",
+    "test": "tsx test/index.ts",
+    "test:symbols": "tsx test/symbol-test.ts", 
+    "test:modules": "tsx test/module-test.ts", 
+    "test:boards": "tsx test/board-test.ts"
   },
   "devDependencies": {
     "@types/argparse": "^2.0.10",
@@ -36,10 +39,12 @@
     "@types/js-yaml": "^4.0.2",
     "@types/klaw": "^3.0.1",
     "@types/through2": "^2.0.36",
+    "npm-run-all": "4.1.5",
     "pegjs": "^0.10.0",
     "prettier": "^3.2.5",
     "prettier-plugin-pegjs": "^2.0.2",
     "tsup": "8.0.2",
+    "tsx": "4.19.1",
     "typescript": "5.6.2"
   },
   "dependencies": {
