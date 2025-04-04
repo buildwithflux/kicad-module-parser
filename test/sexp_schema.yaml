@@ -41,6 +41,7 @@ s_array: # Primitive-like
                 anyOf:
                     - $ref: "#/s_boolean"
                     - $ref: "#/s_string"
+                    - $ref: "#/s_number"
             additional_items: false
     required:
         - type
@@ -69,6 +70,18 @@ s_boolean: # Primitive
             const: "boolean"
         value:
             type: boolean
+    required:
+        - type
+        - value
+    additional_properties: false
+
+s_number: # Primitive
+    type: object
+    properties:
+        type:
+            const: "number"
+        value:
+            type: number
     required:
         - type
         - value

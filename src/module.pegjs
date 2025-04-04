@@ -432,6 +432,7 @@ zone  /* parseZONE_CONTAINER */
         polygon /
         fill_segments /
         uuid /
+        placement /
         name
         ) _ { return v })*
     ")"{
@@ -467,6 +468,24 @@ zone_hatch
              { type: "pitch", value: pitch },
              ] }
  }
+
+enabled = "(" _ type:"enabled" _ value:("yes" / "no") _ ")" {
+     return { type, value: { type: "boolean", value: value === "yes" } }
+}
+
+sheetname = "(" _ type:"sheetname" _ value:string _ ")" {
+     return { type, value }
+}
+
+placement = "(" _ type:"placement" _ value:( v:(
+        enabled /
+        sheetname
+    ) _ { return v })* ")" {
+    return {
+        type,
+        value
+    }
+}
 
 zone_fill
     = "(" _
@@ -812,7 +831,7 @@ COMMON_INT
     / "autoplace_cost180"
 
 module_attr
-    =   "(" _ "attr" _ value:("smd"/"virtual"/"through_hole"/"exclude_from_pos_files"/"exclude_from_bom") _ tags:(tag:(array/string/symbol/number) _ {return tag}) * ")" {
+    =   "(" _ "attr" _ value:("allow_missing_courtyard"/"board_only"/"smd"/"virtual"/"through_hole"/"exclude_from_pos_files"/"exclude_from_bom") _ tags:(tag:(array/string/symbol/number) _ {return tag}) * ")" {
         return  {
             type: "module_attribute",
             value: {type:"string",value},
@@ -900,7 +919,7 @@ fp_text_box
         value:(string/symbol/number) _
         start:start _
         end:end _
-        attrs:((layer/hide/effects/tstamp/uuid/unlocked/border/stroke/hide_prop) _)*
+        attrs:((layer/hide/effects/tstamp/uuid/unlocked/border/stroke/hide_prop/margins) _)*
         ")" {
         return {
             type,
@@ -1075,6 +1094,18 @@ size
                 ]
             }
     }
+
+margins = "(" _ type:"margins" _ left:number _ top:number _ right:number _ bottom:number _ ")" {
+    return {
+       type,
+        value:  [
+            { type: "left", value: left },
+            { type: "top", value: top },
+            { type: "right", value: right },
+            { type: "bottom", value: bottom },
+        ]
+    }
+}
 
 at
     = "(" _ type:"at" _ x:number _ y:number _ angle:(number _)? unlocked:("unlocked" _)?")" {
