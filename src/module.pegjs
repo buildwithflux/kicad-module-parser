@@ -608,6 +608,7 @@ module_contents
     / generator_version
     / module_property
     / locked
+    / embedded_fonts
     / placed
     / layer
     / tedit
@@ -743,6 +744,11 @@ hide = type:"hide" { return { type, value:{ type: "boolean", value: true } }}
 
 border
     = "(" _ type:"border" _ value:("yes" / "no") _ ")" {
+        return { type, value:{ type: "boolean", value: value === "yes" } }
+    }
+
+embedded_fonts
+    = "(" _ type:"embedded_fonts" _ value:("yes" / "no") _ ")" {
         return { type, value:{ type: "boolean", value: value === "yes" } }
     }
 
