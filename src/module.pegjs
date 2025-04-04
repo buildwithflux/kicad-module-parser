@@ -1394,7 +1394,7 @@ start
 }
 
 x_y =
-  x:number _ y:number {
+  x:(number) _ y:(number) {
       return [
                 {type: "x", value:x},
                 {type: "y", value:y},
@@ -1707,8 +1707,9 @@ Real
       return { type:"real", value:val }
   }
 
+// e.g. -.6e-3
 Exponential
-    = val:$((digits / Real) ("e" / "E") ("+" / "-")? digits) {
+    = val:$([+-]? ([0-9]+ "." [0-9]*/[0-9]* "." [0-9]+) [eE] [+-]? [0-9]+) {
       return { type:"exponential", value:val }
     }
 

@@ -31,7 +31,8 @@
     "test": "tsx test/index.ts",
     "test:symbols": "tsx test/symbol-test.ts", 
     "test:modules": "tsx test/module-test.ts", 
-    "test:boards": "tsx test/board-test.ts"
+    "test:boards": "tsx test/board-test.ts",
+    "test:parse": "tsx test/parse-test.ts"
   },
   "devDependencies": {
     "@types/argparse": "^2.0.10",
