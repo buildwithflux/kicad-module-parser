@@ -1515,7 +1515,7 @@ override_value = "(" _ type:"override_value" _  value:string _ ")" {
 style
     = "("_
             type:"style" _
-            options:((thickness/arrow_length/arrow_direction/text_position_mode/extension_height/extension_offset/text_frame) _)* _
+            options:((thickness/arrow_length/arrow_direction/keep_text_aligned/text_position_mode/extension_height/extension_offset/text_frame) _)* _
             value:"keep_text_aligned"? _
             ")" {
             return {
@@ -1530,8 +1530,8 @@ arrow_length = "(" _ type:"arrow_length" _  value:number _ ")" {
     return { type, value }
 }
 
-arrow_direction = "(" _ type:"arrow_direction" _  value:("outward"/"inward") _ ")" {
-    return { type, value }
+arrow_direction = "(" _ type:"arrow_direction" _  value:("outward" / "inward") _ ")" {
+    return { type, value: { type: "string", value } }
 }
 
 keep_text_aligned = "(" _ type:"keep_text_aligned" _  value:bool _ ")" {

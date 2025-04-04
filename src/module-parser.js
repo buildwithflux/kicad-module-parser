@@ -18148,13 +18148,16 @@ function peg$parse(input, options) {
               if (s7 === peg$FAILED) {
                 s7 = peg$parsearrow_direction();
                 if (s7 === peg$FAILED) {
-                  s7 = peg$parsetext_position_mode();
+                  s7 = peg$parsekeep_text_aligned();
                   if (s7 === peg$FAILED) {
-                    s7 = peg$parseextension_height();
+                    s7 = peg$parsetext_position_mode();
                     if (s7 === peg$FAILED) {
-                      s7 = peg$parseextension_offset();
+                      s7 = peg$parseextension_height();
                       if (s7 === peg$FAILED) {
-                        s7 = peg$parsetext_frame();
+                        s7 = peg$parseextension_offset();
+                        if (s7 === peg$FAILED) {
+                          s7 = peg$parsetext_frame();
+                        }
                       }
                     }
                   }
@@ -18183,13 +18186,16 @@ function peg$parse(input, options) {
                 if (s7 === peg$FAILED) {
                   s7 = peg$parsearrow_direction();
                   if (s7 === peg$FAILED) {
-                    s7 = peg$parsetext_position_mode();
+                    s7 = peg$parsekeep_text_aligned();
                     if (s7 === peg$FAILED) {
-                      s7 = peg$parseextension_height();
+                      s7 = peg$parsetext_position_mode();
                       if (s7 === peg$FAILED) {
-                        s7 = peg$parseextension_offset();
+                        s7 = peg$parseextension_height();
                         if (s7 === peg$FAILED) {
-                          s7 = peg$parsetext_frame();
+                          s7 = peg$parseextension_offset();
+                          if (s7 === peg$FAILED) {
+                            s7 = peg$parsetext_frame();
+                          }
                         }
                       }
                     }
@@ -18400,7 +18406,7 @@ function peg$parse(input, options) {
                 }
                 if (s7 !== peg$FAILED) {
                   peg$savedPos = s0;
-                  s1 = peg$c348(s3, s5);
+                  s1 = peg$c389(s3, s5);
                   s0 = s1;
                 } else {
                   peg$currPos = s0;
