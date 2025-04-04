@@ -1534,6 +1534,10 @@ arrow_direction = "(" _ type:"arrow_direction" _  value:("outward"/"inward") _ "
     return { type, value }
 }
 
+keep_text_aligned = "(" _ type:"keep_text_aligned" _  value:bool _ ")" {
+    return { type, value }
+}
+
 text_position_mode = "(" _ type:"text_position_mode" _  value:number _ ")" {
     return { type, value }
 }
