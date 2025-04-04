@@ -51,6 +51,7 @@ walk(path.join(__dirname, "..", "data"))
 // process all the files in the data directory
 // --------------------------------------------------
 function process_file(filepath: string) {
+    console.log("Processing file", filepath);
     const mod: string = fse.readFileSync(filepath).toString();
     let data: any;
     try {

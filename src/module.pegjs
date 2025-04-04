@@ -432,6 +432,7 @@ zone  /* parseZONE_CONTAINER */
         polygon /
         fill_segments /
         uuid /
+        placement /
         name
         ) _ { return v })*
     ")"{
@@ -467,6 +468,24 @@ zone_hatch
              { type: "pitch", value: pitch },
              ] }
  }
+
+enabled = "(" _ type:"enabled" _ value:("yes" / "no") _ ")" {
+     return { type, value: { type: "boolean", value: value === "yes" } }
+}
+
+sheetname = "(" _ type:"sheetname" _ value:string _ ")" {
+     return { type, value }
+}
+
+placement = "(" _ type:"placement" _ value:( v:(
+        enabled /
+        sheetname
+    ) _ { return v })* ")" {
+    return {
+        type,
+        value
+    }
+}
 
 zone_fill
     = "(" _
@@ -608,6 +627,7 @@ module_contents
     / generator_version
     / module_property
     / locked
+    / embedded_fonts
     / placed
     / layer
     / tedit
@@ -702,7 +722,7 @@ effects
     }
 
 font
-    = "(" _ type:"font" _ attrs:(( size/thickness/bold_prop/italic_prop/italic) _ )* _ ")" {
+    = "(" _ type:"font" _ attrs:(( size/thickness/bold_prop/bold/italic_prop/italic) _ )* _ ")" {
         return {
             type,
             value: attrs.map(x => x[0])
@@ -743,6 +763,11 @@ hide = type:"hide" { return { type, value:{ type: "boolean", value: true } }}
 
 border
     = "(" _ type:"border" _ value:("yes" / "no") _ ")" {
+        return { type, value:{ type: "boolean", value: value === "yes" } }
+    }
+
+embedded_fonts
+    = "(" _ type:"embedded_fonts" _ value:("yes" / "no") _ ")" {
         return { type, value:{ type: "boolean", value: value === "yes" } }
     }
 
@@ -806,7 +831,7 @@ COMMON_INT
     / "autoplace_cost180"
 
 module_attr
-    =   "(" _ "attr" _ value:("smd"/"virtual"/"through_hole"/"exclude_from_pos_files"/"exclude_from_bom") _ tags:(tag:(array/string/symbol/number) _ {return tag}) * ")" {
+    =   "(" _ "attr" _ value:("allow_missing_courtyard"/"board_only"/"smd"/"virtual"/"through_hole"/"exclude_from_pos_files"/"exclude_from_bom") _ tags:(tag:(array/string/symbol/number) _ {return tag}) * ")" {
         return  {
             type: "module_attribute",
             value: {type:"string",value},
@@ -832,6 +857,11 @@ net_tie_pad_groups
 
 string_list
     = head:string tail:(_ string)* {
+        return [head, ...tail.map(item => item[1])];
+    }
+
+bare_uuid_list
+    = head:bare_uuid tail:(_ bare_uuid)* {
         return [head, ...tail.map(item => item[1])];
     }
 
@@ -889,7 +919,7 @@ fp_text_box
         value:(string/symbol/number) _
         start:start _
         end:end _
-        attrs:((layer/hide/effects/tstamp/uuid/unlocked/border/stroke/hide_prop) _)*
+        attrs:((layer/hide/effects/tstamp/uuid/unlocked/border/stroke/hide_prop/margins) _)*
         ")" {
         return {
             type,
@@ -1064,6 +1094,18 @@ size
                 ]
             }
     }
+
+margins = "(" _ type:"margins" _ left:number _ top:number _ right:number _ bottom:number _ ")" {
+    return {
+       type,
+        value:  [
+            { type: "left", value: left },
+            { type: "top", value: top },
+            { type: "right", value: right },
+            { type: "bottom", value: bottom },
+        ]
+    }
+}
 
 at
     = "(" _ type:"at" _ x:number _ y:number _ angle:(number _)? unlocked:("unlocked" _)?")" {
@@ -1352,7 +1394,7 @@ start
 }
 
 x_y =
-  x:number _ y:number {
+  x:(number) _ y:(number) {
       return [
                 {type: "x", value:x},
                 {type: "y", value:y},
@@ -1473,7 +1515,7 @@ override_value = "(" _ type:"override_value" _  value:string _ ")" {
 style
     = "("_
             type:"style" _
-            options:((thickness/arrow_length/text_position_mode/extension_height/extension_offset/text_frame) _)* _
+            options:((thickness/arrow_length/arrow_direction/keep_text_aligned/text_position_mode/extension_height/extension_offset/text_frame) _)* _
             value:"keep_text_aligned"? _
             ")" {
             return {
@@ -1485,6 +1527,14 @@ style
         }
 
 arrow_length = "(" _ type:"arrow_length" _  value:number _ ")" {
+    return { type, value }
+}
+
+arrow_direction = "(" _ type:"arrow_direction" _  value:("outward" / "inward") _ ")" {
+    return { type, value: { type: "string", value } }
+}
+
+keep_text_aligned = "(" _ type:"keep_text_aligned" _  value:bool _ ")" {
     return { type, value }
 }
 
@@ -1508,11 +1558,15 @@ text_frame = "(" _ type:"text_frame" _  value:number _ ")" {
 // group:
 // ----------------------------------------
 
-group = "(" _ type:"group" _ value:string _ options:((uuid/members) _)* _ ")" {
+group = "(" _ type:"group" _ value:string _ options:((id/uuid/members) _)* _ ")" {
     return { type, value }
 }
 
-members = "(" _ type:"members" _ value:string_list _ ")" {
+members = "(" _ type:"members" _ value:(string_list/bare_uuid_list) _ ")" {
+    return { type, value }
+}
+
+id = "(" _ type:"id" _  value:bare_uuid _ ")" {
     return { type, value }
 }
 
@@ -1653,8 +1707,9 @@ Real
       return { type:"real", value:val }
   }
 
+// e.g. -.6e-3
 Exponential
-    = val:$((digits / Real) ("e" / "E") ("+" / "-")? digits) {
+    = val:$([+-]? ([0-9]+ "." [0-9]*/[0-9]* "." [0-9]+) [eE] [+-]? [0-9]+) {
       return { type:"exponential", value:val }
     }
 
@@ -1673,7 +1728,11 @@ digits = $([0-9]+)
 hex
     = value:$([0-9a-fA-F]+) {
         return {type: "hex", value}
+    }
 
+bare_uuid
+    = value:$([0-9a-fA-F-]+) {
+        return {type: "bare_uuid", value}
     }
 
 bool
