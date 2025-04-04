@@ -702,7 +702,7 @@ effects
     }
 
 font
-    = "(" _ type:"font" _ attrs:(( size/thickness/bold_prop/italic_prop/italic) _ )* _ ")" {
+    = "(" _ type:"font" _ attrs:(( size/thickness/bold_prop/bold/italic_prop/italic) _ )* _ ")" {
         return {
             type,
             value: attrs.map(x => x[0])
@@ -832,6 +832,11 @@ net_tie_pad_groups
 
 string_list
     = head:string tail:(_ string)* {
+        return [head, ...tail.map(item => item[1])];
+    }
+
+bare_uuid_list
+    = head:bare_uuid tail:(_ bare_uuid)* {
         return [head, ...tail.map(item => item[1])];
     }
 
@@ -1508,11 +1513,15 @@ text_frame = "(" _ type:"text_frame" _  value:number _ ")" {
 // group:
 // ----------------------------------------
 
-group = "(" _ type:"group" _ value:string _ options:((uuid/members) _)* _ ")" {
+group = "(" _ type:"group" _ value:string _ options:((id/uuid/members) _)* _ ")" {
     return { type, value }
 }
 
-members = "(" _ type:"members" _ value:string_list _ ")" {
+members = "(" _ type:"members" _ value:(string_list/bare_uuid_list) _ ")" {
+    return { type, value }
+}
+
+id = "(" _ type:"id" _  value:bare_uuid _ ")" {
     return { type, value }
 }
 
@@ -1673,7 +1682,11 @@ digits = $([0-9]+)
 hex
     = value:$([0-9a-fA-F]+) {
         return {type: "hex", value}
+    }
 
+bare_uuid
+    = value:$([0-9a-fA-F-]+) {
+        return {type: "bare_uuid", value}
     }
 
 bool
