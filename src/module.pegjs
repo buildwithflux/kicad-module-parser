@@ -1709,7 +1709,7 @@ Real
 
 // e.g. -.6e-3
 Exponential
-    = val:$([+-]? ([0-9]+ "." [0-9]*/[0-9]* "." [0-9]+) [eE] [+-]? [0-9]+) {
+    = val:$((digits "." digits?/digits? "." digits) [eE] [+-]? digits) {
       return { type:"exponential", value:val }
     }
 
