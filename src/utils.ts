@@ -139,7 +139,16 @@ function _process(values: any[], type: string, stack: stackitem[]): any {
       gather(values, "filled_polygon");
       gather(values, "polygon");
       break;
+    case "render_cache":
+      gather(values, "polygon");
+      break;
     case "fill_segments":
+      gather(values, "pts");
+      break;
+    case "polygon":
+      gather(values, "pts");
+      break;
+    case "filled_polygon":
       gather(values, "pts");
       break;
     case "net_class":

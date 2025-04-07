@@ -392,9 +392,17 @@ DIMENSION_XY
  / "arrow2b"
 
 segment /* parseTRACK() */
- =  "(" _ type:"segment" _ value:(v:(start / end / width / net / layer / tstamp / status ) _ { return v } )* ")"{
+ =  "(" _ type:"segment" _ value:(v:(segment_flag / start / end / width / net / layer / tstamp / status ) _ { return v } )* ")"{
      return { type, value }
 }
+
+segment_flag
+ = type:$("locked") {
+     return {
+         type,
+         value: { type: "boolean", value: true }
+    }
+ }
 
 arc /* parseARC() */
  =  "(" _ type:"arc" _ value: (v:(start / mid / end / width / net / layer / tstamp / status ) _ { return v } )* ")"{
@@ -418,7 +426,7 @@ via  /* parseVIA */
 }
 
 via_flag
- = type:$("blind"/"micro") {
+ = type:$("blind"/"micro"/"locked") {
      return {
          type,
          value: { type: "boolean", value: true }
@@ -439,9 +447,14 @@ free
   }
 
 polygon
-  = "(" _ type:("polygon"/"filled_polygon") _ value:(v:(pts/layer/island) _ { return v })* ")" {
-       return { type, value }
-   }
+  = "(" _ type:("polygon"/"filled_polygon") _ options:((layer/island) _)* _ pts:(pts _)* ")" {
+    const value = [
+      ...pts.map(x => x[0]),
+      ...(options ? options.map(x => x[0]) : []),
+    ]
+
+    return { type, value }
+  }
 
 island
   = "(" _ type:"island" _ value:bool? _ ")" {
@@ -1384,12 +1397,12 @@ gr_generics
         return generics.map(x => x[0])
     }
 
-render_cache = "(" _ type:"render_cache" _ key:string _ ttl:number _ contents:(v:polygon _ { return v })* _ ")" {
-    return { type, value: {
-      key,
-      ttl,
-      contents
-    }}
+render_cache = "(" _ type:"render_cache" _ key:string _ ttl:number _ contents:(polygon _)* _ ")" {
+    return { type, value: [
+      {type: "key", value: key},
+      {type: "ttl", value: ttl},
+      ...contents.filter(x => x).map(x => x[0])
+    ]}
 }
 
 status = "(" _ type:"status" _  value:hex _ ")" {
