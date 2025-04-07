@@ -694,6 +694,7 @@ module_contents
     / generator_version
     / module_property
     / locked
+    / locked_attr
     / embedded_fonts
     / placed
     / layer
@@ -725,6 +726,11 @@ module_contents
 
 
 locked  = "locked" { return { type: "locked", value: { type: "boolean", value: true }  }}
+
+locked_attr = "(" _ type:"locked" _ value:("yes" / "no")? _ ")" {
+    return { type, value: { type: "boolean", value: value !== "no" } }
+}
+
 placed  = "placed"{ return { type: "placed", value: { type: "boolean", value: true }}}
 
 // ----------------------------------------

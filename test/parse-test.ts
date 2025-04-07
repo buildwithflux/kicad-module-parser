@@ -75,6 +75,7 @@ const result3 = parseModule(
       (style (thickness 0.3) (arrow_length 1.27) (text_position_mode 0) (extension_height 0.58642) (extension_offset 0) keep_text_aligned)
     )
     (footprint "Socket_Arduino_Uno:Socket_Strip_Arduino_1x08"
+      (locked yes)
       (layer "F.Cu")
       (uuid "00000000-0000-0000-0000-0000551af9ea")
       (at 138.938 123.825)
