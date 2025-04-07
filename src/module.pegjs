@@ -367,6 +367,7 @@ dimension /* parseDIMENSION() */
             / dimension_xy
             / format
             / style
+            / orientation
         ) _ )* ")" {
     return {
         type ,
@@ -411,7 +412,7 @@ target_flag
 
 
 via  /* parseVIA */
- =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status / free) _ )*  ")"{
+ =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status / free / remove_unused_layers / keep_end_layers) _ )*  ")"{
     return { type, value: value.map(x => x[0])}
 }
 
@@ -437,9 +438,14 @@ free
   }
 
 polygon
-  = "(" _ type:("polygon"/"filled_polygon") _ value:(v:(pts/layer) _ { return v })* ")" {
+  = "(" _ type:("polygon"/"filled_polygon") _ value:(v:(pts/layer/island) _ { return v })* ")" {
        return { type, value }
    }
+
+island
+  = "(" _ type:"island" _ value:bool? _ ")" {
+    return { type, value: value !== "no" }
+  }
 
 zone  /* parseZONE_CONTAINER */
  =  "(" _ type:"zone" _ value:( v:(
@@ -808,13 +814,13 @@ hide_prop
     }
 
 remove_unused_layers
-    = "(" _ type:"remove_unused_layers" _ value:("yes" / "no") _ ")" {
-        return { type, value:{ type: "boolean", value: value === "yes" } }
+    = "(" _ type:"remove_unused_layers" _ value:("yes" / "no")? _ ")" {
+        return { type, value:{ type: "boolean", value: value !== "no" } }
     }
 
 keep_end_layers
-    = "(" _ type:"keep_end_layers" _ value:("yes" / "no") _ ")" {
-        return { type, value:{ type: "boolean", value: value === "yes" } }
+    = "(" _ type:"keep_end_layers" _ value:("yes" / "no")? _ ")" {
+        return { type, value:{ type: "boolean", value: value !== "no" } }
     }
 
 pad_property
@@ -1513,6 +1519,7 @@ dimensions
                      / height
                      / gr_text
                      / format
+                     / orientation
                      / style) _)*
         _")" {
         return {
@@ -1526,6 +1533,10 @@ dimension_type = "(" _ type:"type" _ value:("aligned" / "leader" / "center" / "o
 }
 
 height = "(" _ type:"height" _  value:number _ ")" {
+    return { type, value }
+}
+
+orientation = "(" _ type:"orientation" _  value:number _ ")" {
     return { type, value }
 }
 
