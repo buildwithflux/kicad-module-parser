@@ -20,8 +20,8 @@
   "license": "MIT",
   "scripts": {
     "build": "run-s build:module build:symbol build:package",
-    "build:module": "npx pegjs -o src/module-parser.js  --allowed-start-rules module,board ./src/module.pegjs",
-    "build:symbol": "npx pegjs -o src/symbol-parser.js  --allowed-start-rules kicad_symbol_lib ./src/symbol.pegjs",
+    "build:module": "pegjs -o src/module-parser.js  --allowed-start-rules module,board ./src/module.pegjs",
+    "build:symbol": "pegjs -o src/symbol-parser.js  --allowed-start-rules kicad_symbol_lib ./src/symbol.pegjs",
     "build:package": "tsup",
     "check": "tsc -b -noEmit",
     "clean": "rm -rf lib dist",
@@ -31,7 +31,8 @@
     "test": "tsx test/index.ts",
     "test:symbols": "tsx test/symbol-test.ts", 
     "test:modules": "tsx test/module-test.ts", 
-    "test:boards": "tsx test/board-test.ts"
+    "test:boards": "tsx test/board-test.ts",
+    "test:parse": "tsx test/parse-test.ts"
   },
   "devDependencies": {
     "@types/argparse": "^2.0.10",
@@ -43,7 +44,7 @@
     "pegjs": "^0.10.0",
     "prettier": "^3.2.5",
     "prettier-plugin-pegjs": "^2.0.2",
-    "tsup": "8.0.2",
+    "tsup": "8.3.5",
     "tsx": "4.19.1",
     "typescript": "5.6.2"
   },

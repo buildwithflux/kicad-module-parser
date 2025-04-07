@@ -25,6 +25,7 @@ board /* parseBOARD_unchecked */
         segment /
         arc /
         via /
+        group /
         zone /
         target /
         dimension) _ {return val})*
@@ -39,7 +40,7 @@ board /* parseBOARD_unchecked */
 
 general /* parseGeneralSection */
  =  "(" _ type:"general" _
-        options: (general_opt/general_array_opt)*
+        options: (general_opt/general_bool_opt/general_array_opt)*
     ")" {
     return { type,value: options }
  }
@@ -52,6 +53,14 @@ general_opt
         return {type, value}
     })
 
+general_bool_opt
+ = ( "(" _
+        type:("legacy_teardrops") _
+        value:bool _
+    ")" _ {
+        return {type, value}
+    })
+
 general_array_opt
  =  "(" _
         type:("area") _
@@ -59,20 +68,27 @@ general_array_opt
     ")" _ {return {type, value}}
 
 
-paper /* parsePAGE_INFO */
- =  "(" _
-        ("page"/"paper") _
-        ('"'/'"')? _
-        size:("A0"/"A1"/"A2"/"A3"/"A4"/"A5"/"A"/"B"/"C"/"D") _
-        ('"'/'"')? _
-        portrait:("portrait" _ )?
-        ")" {
-        const value = [
-            { type: "size", value: {type: "string", value: size } },
-            { type: "portrait", value: { type: "boolean", value: !!portrait } }
-        ]
-    return {type: "page", value}
- }
+paper /* see https://docs.kicad.org/doxygen/classPAGE__INFO.html and https://docs.kicad.org/doxygen/page__info_8cpp_source.html#l00121 */
+  = "(" _
+    ("page"/"paper") _
+    ('"'/'"')? _
+    size:("A0"/"A1"/"A2"/"A3"/"A4"/"A5"/"A"/"B"/"C"/"D"/"E"/"GERBER"/"USLetter"/"USLegal"/"USLedger"/"User") _
+    ('"'/'"')? _
+    options:(("portrait"/number) _)*
+    ")" {
+      const isPortrait = options.includes("portrait");
+      const custom_width = options.filter(x => typeof x === "number")[0];
+      const custom_height = options.filter(x => typeof x === "number")[1];
+
+      const value = [
+          { type: "size", value: {type: "string", value: size } },
+          ...(size === "User" && custom_width ? [{ type: "custom_width", value: {type: number, value: custom_width }}] : []),
+          ...(size === "User" && custom_height ? [{ type: "custom_height", value: {type: number, value: custom_height }}] : []),
+          { type: "portrait", value: { type: "boolean", value: isPortrait } }
+      ]
+
+      return {type: "page", value}
+    }
 
 title_block /* parseTITLE_BLOCK */
  =  "(" _
@@ -135,6 +151,7 @@ setup_flag
     = "(" _ type:SETUP_FLAG _ value:bool _ ")" { return { type, value } }
 SETUP_FLAG
  = "filled_areas_thickness"
+ / "allow_soldermask_bridges_in_footprints"
  / "blind_buried_vias_allowed"
  / "uvias_allowed"
  / "zone_45_only"
@@ -231,6 +248,7 @@ pcbplotparams
         (pcbplotparams_flag /
         pcbplotparams_numeric /
         pcbplotparams_layerselection /
+        pcbplotparams_plot_on_all_layers_selection /
         pcbplotparams_outputdirectory) _
         )*
     ")"{
@@ -239,6 +257,11 @@ pcbplotparams
 
 pcbplotparams_layerselection
     = "(" _ type:"layerselection" _ value:(string/symbol) _ ")" {
+        return { type, value }
+    }
+
+pcbplotparams_plot_on_all_layers_selection
+    = "(" _ type:"plot_on_all_layers_selection" _ value:(string/symbol) _ ")" {
         return { type, value }
     }
 
@@ -261,6 +284,9 @@ PCBPLOTPARAMS_NUMERIC
  / "drillshape"
  / "scaleselection"
  / "svgprecision"
+ / "dashed_line_dash_ratio"
+ / "dashed_line_gap_ratio"
+ / "gerberprecision"
 
 pcbplotparams_flag
     = "(" _ type:PCBPLOTPARAMS_FLAG _ value:pcbplotparams_bool _ ")" { return { type, value } }
@@ -284,14 +310,17 @@ PCBPLOTPARAMS_FLAG
  / "plotreference"
  / "plotvalue"
  / "plotinvisibletext"
+ / "plotfptext"
  / "plotothertext"
  / "sketchpadsonfab"
  / "padsonsilk"
  / "subtractmaskfromsilk"
  / "mirror"
+ / "pdf_front_fp_property_popups"
+ / "pdf_back_fp_property_popups"
 
 pcbplotparams_bool
-  = value:("true" / "false"){ return { type: "boolean", value: value === "true" } }
+  = value:("true" / "false" / "yes" / "no"){ return { type: "boolean", value: value === "true" || value === "yes" } }
 
 unsupported_setup
  = "(" _ type:("stackup") _ (expression _ )* ")" {
@@ -347,14 +376,25 @@ NET_CLASS_BOARDUNIT
 dimension /* parseDIMENSION() */
  =  "(" _
         type:"dimension" _
-        dimension: number _
-        width: width _
-        options: ( (layer / tstamp / gr_text / dimension_xy) _ )*")"{
+        dimension:number? _
+        options: ((
+          dimension_type
+            / layer
+            / pts
+            / height
+            / width
+            / tstamp
+            / gr_text
+            / dimension_xy
+            / format
+            / style
+            / orientation
+            / uuid
+        ) _ )* ")" {
     return {
         type ,
         value: [
-            { type: "dimension", value: dimension },
-            width,
+            ...(dimension ? [{ type: "dimension", value: dimension }] : []),
             ...options.map(x => x[0])
         ],
     }
@@ -373,7 +413,7 @@ DIMENSION_XY
  / "arrow2b"
 
 segment /* parseTRACK() */
- =  "(" _ type:"segment" _ value:(v:(start / end / width / net / layer / tstamp / status ) _ { return v } )* ")"{
+ =  "(" _ type:"segment" _ value:(v:(start / end / width / net / layer / tstamp / status / uuid / locked / locked_attr ) _ { return v } )* ")"{
      return { type, value }
 }
 
@@ -394,12 +434,12 @@ target_flag
 
 
 via  /* parseVIA */
- =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status) _ )*  ")"{
+ =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status / free / remove_unused_layers / keep_end_layers / uuid / locked_attr) _ )*  ")"{
     return { type, value: value.map(x => x[0])}
 }
 
 via_flag
- = type:$("blind"/"micro") {
+ = type:$("blind"/"micro"/"locked") {
      return {
          type,
          value: { type: "boolean", value: true }
@@ -414,10 +454,25 @@ via_param
     return { type, value }
 }
 
-polygon=
-   "(" _ type:("polygon"/"filled_polygon") _ value: pts _ ")"  {
-       return { type, value: [ value ] }
-   }
+free
+  = "(" _ type:"free" _ ")" {
+      return { type, value: { type: "boolean", value: true } }
+  }
+
+polygon
+  = "(" _ type:("polygon"/"filled_polygon") _ options:((layer/island) _)* _ pts:(pts _)* ")" {
+    const value = [
+      ...pts.map(x => x[0]),
+      ...(options ? options.map(x => x[0]) : []),
+    ]
+
+    return { type, value }
+  }
+
+island
+  = "(" _ type:"island" _ value:bool? _ ")" {
+    return { type, value: { type:"boolean", value: value !== "no" }}
+  }
 
 zone  /* parseZONE_CONTAINER */
  =  "(" _ type:"zone" _ value:( v:(
@@ -432,6 +487,7 @@ zone  /* parseZONE_CONTAINER */
         polygon /
         fill_segments /
         uuid /
+        placement /
         name
         ) _ { return v })*
     ")"{
@@ -468,11 +524,33 @@ zone_hatch
              ] }
  }
 
+enabled = "(" _ type:"enabled" _ value:("yes" / "no") _ ")" {
+     return { type, value: { type: "boolean", value: value === "yes" } }
+}
+
+sheetname = "(" _ type:"sheetname" _ value:string _ ")" {
+     return { type, value }
+}
+
+sheetfile = "(" _ type:"sheetfile" _ value:string _ ")" {
+     return { type, value }
+}
+
+placement = "(" _ type:"placement" _ value:( v:(
+        enabled /
+        sheetname
+    ) _ { return v })* ")" {
+    return {
+        type,
+        value
+    }
+}
+
 zone_fill
     = "(" _
         type:"fill" _
         filled:("yes" _ )?
-        value: ( (fill_options / fill_mode / fill_smoothing) _ )*
+        value: ( (fill_options / fill_mode / fill_smoothing / fill_hatch_border_algorithm) _ )*
     ")"
     {
         value = value.map(x => x[0])
@@ -491,6 +569,10 @@ fill_smoothing = "(" _ type:"smoothing" _ value:("none" / "chamfer" / "fillet") 
     return { type, value: { type: "string", value } }
 }
 
+fill_hatch_border_algorithm = "(" _ type:"hatch_border_algorithm" _ value:("hatch_thickness" / "min_thickness") _ ")" {
+    return { type, value: { type: "string", value } }
+}
+
 fill_options
   =  "(" _
     type:(
@@ -499,6 +581,7 @@ fill_options
         "hatch_orientation" /
         "hatch_smoothing_level" /
         "hatch_smoothing_value" /
+        "hatch_min_hole_area" /
         "arc_segments" /
         "thermal_gap" /
         "thermal_bridge_width" /
@@ -608,6 +691,8 @@ module_contents
     / generator_version
     / module_property
     / locked
+    / locked_attr
+    / embedded_fonts
     / placed
     / layer
     / tedit
@@ -619,6 +704,8 @@ module_contents
     / common_numeric // / solder_mask_margin / solder_paste_margin / solder_paste_ratio / clearance / thermal_width / thermal_gap
     / common_int // / autoplace_cost90 / autoplace_cost180 / zone_connect
     / module_attr // T_attr
+    / sheetfile
+    / sheetname
     / fp_text
     / fp_text_box
     / fp_arc
@@ -630,6 +717,7 @@ module_contents
     / pad
     / model
     / zone
+    / uuid
     / net_tie_pad_groups
     / private_layers
     / dimensions
@@ -637,6 +725,11 @@ module_contents
 
 
 locked  = "locked" { return { type: "locked", value: { type: "boolean", value: true }  }}
+
+locked_attr = "(" _ type:"locked" _ value:("yes" / "no")? _ ")" {
+    return { type, value: { type: "boolean", value: value !== "no" } }
+}
+
 placed  = "placed"{ return { type: "placed", value: { type: "boolean", value: true }}}
 
 // ----------------------------------------
@@ -702,12 +795,16 @@ effects
     }
 
 font
-    = "(" _ type:"font" _ attrs:(( size/thickness/bold_prop/italic_prop/italic) _ )* _ ")" {
+    = "(" _ type:"font" _ attrs:(( face/size/thickness/bold_prop/bold/italic_prop/italic) _ )* _ ")" {
         return {
             type,
             value: attrs.map(x => x[0])
         }
     }
+
+face = "(" _ type:"face" _ value:string _ ")" {
+  return { type, value }
+}
 
 thickness
     = "(" _ type:"thickness" _ value:number _ ")" {
@@ -746,6 +843,11 @@ border
         return { type, value:{ type: "boolean", value: value === "yes" } }
     }
 
+embedded_fonts
+    = "(" _ type:"embedded_fonts" _ value:("yes" / "no") _ ")" {
+        return { type, value:{ type: "boolean", value: value === "yes" } }
+    }
+
 unlocked
     = "(" _ type:"unlocked" _ value:("yes" / "no") _ ")" {
         return { type, value:{ type: "boolean", value: value === "yes" } }
@@ -757,13 +859,13 @@ hide_prop
     }
 
 remove_unused_layers
-    = "(" _ type:"remove_unused_layers" _ value:("yes" / "no") _ ")" {
-        return { type, value:{ type: "boolean", value: value === "yes" } }
+    = "(" _ type:"remove_unused_layers" _ value:("yes" / "no")? _ ")" {
+        return { type, value:{ type: "boolean", value: value !== "no" } }
     }
 
 keep_end_layers
-    = "(" _ type:"keep_end_layers" _ value:("yes" / "no") _ ")" {
-        return { type, value:{ type: "boolean", value: value === "yes" } }
+    = "(" _ type:"keep_end_layers" _ value:("yes" / "no")? _ ")" {
+        return { type, value:{ type: "boolean", value: value !== "no" } }
     }
 
 pad_property
@@ -806,7 +908,7 @@ COMMON_INT
     / "autoplace_cost180"
 
 module_attr
-    =   "(" _ "attr" _ value:("smd"/"virtual"/"through_hole"/"exclude_from_pos_files"/"exclude_from_bom") _ tags:(tag:(array/string/symbol/number) _ {return tag}) * ")" {
+    =   "(" _ "attr" _ value:("allow_missing_courtyard"/"board_only"/"smd"/"virtual"/"through_hole"/"exclude_from_pos_files"/"exclude_from_bom") _ tags:(tag:(array/string/symbol/number) _ {return tag}) * ")" {
         return  {
             type: "module_attribute",
             value: {type:"string",value},
@@ -832,6 +934,11 @@ net_tie_pad_groups
 
 string_list
     = head:string tail:(_ string)* {
+        return [head, ...tail.map(item => item[1])];
+    }
+
+bare_uuid_list
+    = head:bare_uuid tail:(_ bare_uuid)* {
         return [head, ...tail.map(item => item[1])];
     }
 
@@ -889,7 +996,7 @@ fp_text_box
         value:(string/symbol/number) _
         start:start _
         end:end _
-        attrs:((layer/hide/effects/tstamp/uuid/unlocked/border/stroke/hide_prop) _)*
+        attrs:((layer/hide/effects/tstamp/uuid/unlocked/border/stroke/hide_prop/margins) _)*
         ")" {
         return {
             type,
@@ -1028,6 +1135,8 @@ pad_attr
     / uuid
     / remove_unused_layers
     / keep_end_layers
+    / pintype
+    / pinfunction
     / pad_property;
 
 chamfer
@@ -1065,6 +1174,18 @@ size
             }
     }
 
+margins = "(" _ type:"margins" _ left:number _ top:number _ right:number _ bottom:number _ ")" {
+    return {
+       type,
+        value:  [
+            { type: "left", value: left },
+            { type: "top", value: top },
+            { type: "right", value: right },
+            { type: "bottom", value: bottom },
+        ]
+    }
+}
+
 at
     = "(" _ type:"at" _ x:number _ y:number _ angle:(number _)? unlocked:("unlocked" _)?")" {
         var value = [
@@ -1086,6 +1207,23 @@ rect_delta
                     ]
                 }
     }
+
+pintype
+    = "(" _
+      type:"pintype" _
+      value:string _
+    ")" {
+      return { type, value }
+    }
+
+pinfunction
+    = "(" _
+      type:"pinfunction" _
+      value:string _
+    ")" {
+      return { type, value }
+    }
+
 
 // --------------------------------------------------
 // drill
@@ -1268,7 +1406,7 @@ gr_text
     type:"gr_text" _
     text: (string / symbol) _
     at:at _
-    options:( (layer  / tstamp / effects / uuid) _ ) *
+    options:( (layer / tstamp / effects / uuid / render_cache) _ ) *
     ")" {
 
      const value  = [
@@ -1281,9 +1419,17 @@ gr_text
 }
 
 gr_generics
-    = generics:( (angle /layer / width / fill / tstamp / status / uuid )_)* {
+    = generics:( ( stroke / angle /layer / width / fill / tstamp / status / uuid )_)* {
         return generics.map(x => x[0])
     }
+
+render_cache = "(" _ type:"render_cache" _ key:string _ ttl:number _ contents:(polygon _)* _ ")" {
+    return { type, value: [
+      {type: "key", value: key},
+      {type: "ttl", value: ttl},
+      ...contents.filter(x => x).map(x => x[0])
+    ]}
+}
 
 status = "(" _ type:"status" _  value:hex _ ")" {
     return { type, value }
@@ -1352,7 +1498,7 @@ start
 }
 
 x_y =
-  x:number _ y:number {
+  x:(number) _ y:(number) {
       return [
                 {type: "x", value:x},
                 {type: "y", value:y},
@@ -1413,23 +1559,29 @@ dimensions
         options:((dimension_type
                      / layer
                      / uuid
+                     / tstamp
                      / pts
                      / height
                      / gr_text
                      / format
+                     / orientation
                      / style) _)*
-        ")" {
+        _")" {
         return {
             type,
             value: options.map(x => x[0]) // Only return the actual parsed attributes
         };
     }
 
-dimension_type = "(" _ type:"type" _ value:("aligned" / "leader") _ ")" {
+dimension_type = "(" _ type:"type" _ value:("aligned" / "leader" / "center" / "orthogonal") _ ")" {
     return { type: "dimension_type", value: { type: "string", value } }
 }
 
 height = "(" _ type:"height" _  value:number _ ")" {
+    return { type, value }
+}
+
+orientation = "(" _ type:"orientation" _  value:number _ ")" {
     return { type, value }
 }
 
@@ -1473,7 +1625,7 @@ override_value = "(" _ type:"override_value" _  value:string _ ")" {
 style
     = "("_
             type:"style" _
-            options:((thickness/arrow_length/text_position_mode/extension_height/extension_offset/text_frame) _)* _
+            options:((thickness/arrow_length/arrow_direction/keep_text_aligned/text_position_mode/extension_height/extension_offset/text_frame) _)* _
             value:"keep_text_aligned"? _
             ")" {
             return {
@@ -1485,6 +1637,14 @@ style
         }
 
 arrow_length = "(" _ type:"arrow_length" _  value:number _ ")" {
+    return { type, value }
+}
+
+arrow_direction = "(" _ type:"arrow_direction" _  value:("outward" / "inward") _ ")" {
+    return { type, value: { type: "string", value } }
+}
+
+keep_text_aligned = "(" _ type:"keep_text_aligned" _  value:bool _ ")" {
     return { type, value }
 }
 
@@ -1508,11 +1668,15 @@ text_frame = "(" _ type:"text_frame" _  value:number _ ")" {
 // group:
 // ----------------------------------------
 
-group = "(" _ type:"group" _ value:string _ options:((uuid/members) _)* _ ")" {
+group = "(" _ type:"group" _ value:string _ options:((id/uuid/members) _)* _ ")" {
     return { type, value }
 }
 
-members = "(" _ type:"members" _ value:string_list _ ")" {
+members = "(" _ type:"members" _ value:(string_list/bare_uuid_list) _ ")" {
+    return { type, value }
+}
+
+id = "(" _ type:"id" _  value:bare_uuid _ ")" {
     return { type, value }
 }
 
@@ -1591,7 +1755,7 @@ EscapeSequence
   / "v"  { return "\x0B"; }
 
 
-// skipping net, pinfunction, die_llength
+// skipping net, die_llength
 
 // --------------------------------------------------
 // generic s-expression (for ignoring things...)
@@ -1640,7 +1804,7 @@ Newline = "\r\n" / "\n" / "\r"
 
 // <number>::= [<sign>] [<positive_integer> | <real> | <fraction>]
 number
-    = val:$([-+]?  (Exponential/Real/Fraction/digits)) {
+    = val:$([-+]? (Exponential/Real/Fraction/digits)) {
         return { type:"number", value:val }
     }
 
@@ -1649,12 +1813,13 @@ number_
         { return value }
 
 Real
-  = val:$((digits("."(digits?))?) / "." digits) {
+  = val:$(digits("."(digits?)?)? / "." digits) {
       return { type:"real", value:val }
   }
 
+// e.g. -.6e-3
 Exponential
-    = val:$((digits / Real) ("e" / "E") ("+" / "-")? digits) {
+    = val:$([-+]? Real [eE] [+-]? digits) {
       return { type:"exponential", value:val }
     }
 
@@ -1673,7 +1838,11 @@ digits = $([0-9]+)
 hex
     = value:$([0-9a-fA-F]+) {
         return {type: "hex", value}
+    }
 
+bare_uuid
+    = value:$([0-9a-fA-F-]+) {
+        return {type: "bare_uuid", value}
     }
 
 bool
