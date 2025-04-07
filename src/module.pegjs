@@ -403,7 +403,7 @@ target_flag
 
 
 via  /* parseVIA */
- =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status) _ )*  ")"{
+ =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status / free) _ )*  ")"{
     return { type, value: value.map(x => x[0])}
 }
 
@@ -423,8 +423,13 @@ via_param
     return { type, value }
 }
 
-polygon=
-   "(" _ type:("polygon"/"filled_polygon") _ value:(v:(pts/layer) _ { return v })* ")" {
+free
+  = "(" _ type:"free" _ ")" {
+      return { type, value: { type: "boolean", value: true } }
+  }
+
+polygon
+  = "(" _ type:("polygon"/"filled_polygon") _ value:(v:(pts/layer) _ { return v })* ")" {
        return { type, value }
    }
 
