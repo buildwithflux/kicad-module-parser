@@ -519,7 +519,7 @@ zone_fill
     = "(" _
         type:"fill" _
         filled:("yes" _ )?
-        value: ( (fill_options / fill_mode / fill_smoothing) _ )*
+        value: ( (fill_options / fill_mode / fill_smoothing / fill_hatch_border_algorithm) _ )*
     ")"
     {
         value = value.map(x => x[0])
@@ -538,6 +538,10 @@ fill_smoothing = "(" _ type:"smoothing" _ value:("none" / "chamfer" / "fillet") 
     return { type, value: { type: "string", value } }
 }
 
+fill_hatch_border_algorithm = "(" _ type:"hatch_border_algorithm" _ value:("hatch_thickness" / "min_thickness") _ ")" {
+    return { type, value: { type: "string", value } }
+}
+
 fill_options
   =  "(" _
     type:(
@@ -546,6 +550,7 @@ fill_options
         "hatch_orientation" /
         "hatch_smoothing_level" /
         "hatch_smoothing_value" /
+        "hatch_min_hole_area" /
         "arc_segments" /
         "thermal_gap" /
         "thermal_bridge_width" /
