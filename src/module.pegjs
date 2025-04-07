@@ -231,6 +231,7 @@ pcbplotparams
         (pcbplotparams_flag /
         pcbplotparams_numeric /
         pcbplotparams_layerselection /
+        pcbplotparams_plot_on_all_layers_selection /
         pcbplotparams_outputdirectory) _
         )*
     ")"{
@@ -239,6 +240,11 @@ pcbplotparams
 
 pcbplotparams_layerselection
     = "(" _ type:"layerselection" _ value:(string/symbol) _ ")" {
+        return { type, value }
+    }
+
+pcbplotparams_plot_on_all_layers_selection
+    = "(" _ type:"plot_on_all_layers_selection" _ value:(string/symbol) _ ")" {
         return { type, value }
     }
 
@@ -261,6 +267,8 @@ PCBPLOTPARAMS_NUMERIC
  / "drillshape"
  / "scaleselection"
  / "svgprecision"
+ / "dashed_line_dash_ratio"
+ / "dashed_line_gap_ratio"
 
 pcbplotparams_flag
     = "(" _ type:PCBPLOTPARAMS_FLAG _ value:pcbplotparams_bool _ ")" { return { type, value } }
@@ -736,12 +744,16 @@ effects
     }
 
 font
-    = "(" _ type:"font" _ attrs:(( size/thickness/bold_prop/bold/italic_prop/italic) _ )* _ ")" {
+    = "(" _ type:"font" _ attrs:(( face/size/thickness/bold_prop/bold/italic_prop/italic) _ )* _ ")" {
         return {
             type,
             value: attrs.map(x => x[0])
         }
     }
+
+face = "(" _ type:"face" _ value:string _ ")" {
+  return { type, value }
+}
 
 thickness
     = "(" _ type:"thickness" _ value:number _ ")" {
@@ -1343,7 +1355,7 @@ gr_text
     type:"gr_text" _
     text: (string / symbol) _
     at:at _
-    options:( (layer  / tstamp / effects / uuid) _ ) *
+    options:( (layer / tstamp / effects / uuid / render_cache) _ ) *
     ")" {
 
      const value  = [
@@ -1356,9 +1368,17 @@ gr_text
 }
 
 gr_generics
-    = generics:( (angle /layer / width / fill / tstamp / status / uuid )_)* {
+    = generics:( ( stroke / angle /layer / width / fill / tstamp / status / uuid )_)* {
         return generics.map(x => x[0])
     }
+
+render_cache = "(" _ type:"render_cache" _ key:string _ ttl:number _ contents:(v:polygon _ { return v })* _ ")" {
+    return { type, value: {
+      key,
+      ttl,
+      contents
+    }}
+}
 
 status = "(" _ type:"status" _  value:hex _ ")" {
     return { type, value }
@@ -1679,7 +1699,7 @@ EscapeSequence
   / "v"  { return "\x0B"; }
 
 
-// skipping net, pinfunction, die_llength
+// skipping net, die_llength
 
 // --------------------------------------------------
 // generic s-expression (for ignoring things...)
