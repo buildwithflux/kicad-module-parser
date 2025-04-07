@@ -25,6 +25,7 @@ board /* parseBOARD_unchecked */
         segment /
         arc /
         via /
+        group /
         zone /
         target /
         dimension) _ {return val})*
@@ -444,7 +445,7 @@ polygon
 
 island
   = "(" _ type:"island" _ value:bool? _ ")" {
-    return { type, value: value !== "no" }
+    return { type, value: { type:"boolean", value: value !== "no" }}
   }
 
 zone  /* parseZONE_CONTAINER */

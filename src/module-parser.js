@@ -588,7 +588,7 @@ function peg$parse(input, options) {
       peg$c363 = "island",
       peg$c364 = peg$literalExpectation("island", false),
       peg$c365 = function(type, value) {
-          return { type, value: value !== "no" }
+          return { type, value: { type:"boolean", value: value !== "no" }}
         },
       peg$c366 = "fill_segments",
       peg$c367 = peg$literalExpectation("fill_segments", false),
@@ -1896,11 +1896,14 @@ function peg$parse(input, options) {
                                                       if (s8 === peg$FAILED) {
                                                         s8 = peg$parsevia();
                                                         if (s8 === peg$FAILED) {
-                                                          s8 = peg$parsezone();
+                                                          s8 = peg$parsegroup();
                                                           if (s8 === peg$FAILED) {
-                                                            s8 = peg$parsetarget();
+                                                            s8 = peg$parsezone();
                                                             if (s8 === peg$FAILED) {
-                                                              s8 = peg$parsedimension();
+                                                              s8 = peg$parsetarget();
+                                                              if (s8 === peg$FAILED) {
+                                                                s8 = peg$parsedimension();
+                                                              }
                                                             }
                                                           }
                                                         }
@@ -1986,11 +1989,14 @@ function peg$parse(input, options) {
                                                         if (s8 === peg$FAILED) {
                                                           s8 = peg$parsevia();
                                                           if (s8 === peg$FAILED) {
-                                                            s8 = peg$parsezone();
+                                                            s8 = peg$parsegroup();
                                                             if (s8 === peg$FAILED) {
-                                                              s8 = peg$parsetarget();
+                                                              s8 = peg$parsezone();
                                                               if (s8 === peg$FAILED) {
-                                                                s8 = peg$parsedimension();
+                                                                s8 = peg$parsetarget();
+                                                                if (s8 === peg$FAILED) {
+                                                                  s8 = peg$parsedimension();
+                                                                }
                                                               }
                                                             }
                                                           }
