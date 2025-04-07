@@ -40,7 +40,7 @@ board /* parseBOARD_unchecked */
 
 general /* parseGeneralSection */
  =  "(" _ type:"general" _
-        options: (general_opt/general_array_opt)*
+        options: (general_opt/general_bool_opt/general_array_opt)*
     ")" {
     return { type,value: options }
  }
@@ -49,6 +49,14 @@ general_opt
  = ( "(" _
         type:("thickness"/"drawings"/"tracks"/"zones"/"modules"/"nets"/"links"/"no_connects"/"area") _
         value:number_
+    ")" _ {
+        return {type, value}
+    })
+
+general_bool_opt
+ = ( "(" _
+        type:("legacy_teardrops") _
+        value:bool _
     ")" _ {
         return {type, value}
     })
@@ -143,6 +151,7 @@ setup_flag
     = "(" _ type:SETUP_FLAG _ value:bool _ ")" { return { type, value } }
 SETUP_FLAG
  = "filled_areas_thickness"
+ / "allow_soldermask_bridges_in_footprints"
  / "blind_buried_vias_allowed"
  / "uvias_allowed"
  / "zone_45_only"
@@ -301,14 +310,17 @@ PCBPLOTPARAMS_FLAG
  / "plotreference"
  / "plotvalue"
  / "plotinvisibletext"
+ / "plotfptext"
  / "plotothertext"
  / "sketchpadsonfab"
  / "padsonsilk"
  / "subtractmaskfromsilk"
  / "mirror"
+ / "pdf_front_fp_property_popups"
+ / "pdf_back_fp_property_popups"
 
 pcbplotparams_bool
-  = value:("true" / "false"){ return { type: "boolean", value: value === "true" } }
+  = value:("true" / "false" / "yes" / "no"){ return { type: "boolean", value: value === "true" || value === "yes" } }
 
 unsupported_setup
  = "(" _ type:("stackup") _ (expression _ )* ")" {
