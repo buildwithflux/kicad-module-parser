@@ -68,6 +68,7 @@ const result3 = parseModule(
     (dimension (type aligned) (layer "F.CrtYd") (tstamp f78e02cd-9600-4173-be8d-67e530b5d19f)
       (pts (xy 213.5 78.5) (xy 210 78.5))
       (height 9.5)
+      (uuid "00000000-0000-0000-0000001337000000")
       (gr_text "3.5000 mm" (at 211.75 67.2) (layer "F.CrtYd") (tstamp f78e02cd-9600-4173-be8d-67e530b5d19f)
         (effects (font (size 1.5 1.5) (thickness 0.3)))
       )
@@ -76,6 +77,7 @@ const result3 = parseModule(
     )
     (footprint "Socket_Arduino_Uno:Socket_Strip_Arduino_1x08"
       (locked yes)
+      (sheetfile "foo.kicad_sch")
       (layer "F.Cu")
       (uuid "00000000-0000-0000-0000-0000551af9ea")
       (at 138.938 123.825)

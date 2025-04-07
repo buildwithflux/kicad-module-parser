@@ -389,6 +389,7 @@ dimension /* parseDIMENSION() */
             / format
             / style
             / orientation
+            / uuid
         ) _ )* ")" {
     return {
         type ,
@@ -412,7 +413,7 @@ DIMENSION_XY
  / "arrow2b"
 
 segment /* parseTRACK() */
- =  "(" _ type:"segment" _ value:(v:(segment_flag / start / end / width / net / layer / tstamp / status ) _ { return v } )* ")"{
+ =  "(" _ type:"segment" _ value:(v:(segment_flag / start / end / width / net / layer / tstamp / status / uuid ) _ { return v } )* ")"{
      return { type, value }
 }
 
@@ -441,7 +442,7 @@ target_flag
 
 
 via  /* parseVIA */
- =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status / free / remove_unused_layers / keep_end_layers) _ )*  ")"{
+ =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status / free / remove_unused_layers / keep_end_layers / uuid) _ )*  ")"{
     return { type, value: value.map(x => x[0])}
 }
 
@@ -536,6 +537,10 @@ enabled = "(" _ type:"enabled" _ value:("yes" / "no") _ ")" {
 }
 
 sheetname = "(" _ type:"sheetname" _ value:string _ ")" {
+     return { type, value }
+}
+
+sheetfile = "(" _ type:"sheetfile" _ value:string _ ")" {
      return { type, value }
 }
 
@@ -707,6 +712,8 @@ module_contents
     / common_numeric // / solder_mask_margin / solder_paste_margin / solder_paste_ratio / clearance / thermal_width / thermal_gap
     / common_int // / autoplace_cost90 / autoplace_cost180 / zone_connect
     / module_attr // T_attr
+    / sheetfile
+    / sheetname
     / fp_text
     / fp_text_box
     / fp_arc
