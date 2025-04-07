@@ -413,17 +413,9 @@ DIMENSION_XY
  / "arrow2b"
 
 segment /* parseTRACK() */
- =  "(" _ type:"segment" _ value:(v:(segment_flag / start / end / width / net / layer / tstamp / status / uuid ) _ { return v } )* ")"{
+ =  "(" _ type:"segment" _ value:(v:(start / end / width / net / layer / tstamp / status / uuid / locked / locked_attr ) _ { return v } )* ")"{
      return { type, value }
 }
-
-segment_flag
- = type:$("locked") {
-     return {
-         type,
-         value: { type: "boolean", value: true }
-    }
- }
 
 arc /* parseARC() */
  =  "(" _ type:"arc" _ value: (v:(start / mid / end / width / net / layer / tstamp / status ) _ { return v } )* ")"{
@@ -442,7 +434,7 @@ target_flag
 
 
 via  /* parseVIA */
- =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status / free / remove_unused_layers / keep_end_layers / uuid) _ )*  ")"{
+ =  "(" _ type:"via" _ value:((via_param / via_flag / at  / size1  / layers / tstamp / status / free / remove_unused_layers / keep_end_layers / uuid / locked_attr) _ )*  ")"{
     return { type, value: value.map(x => x[0])}
 }
 
