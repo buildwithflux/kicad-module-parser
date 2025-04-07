@@ -74,6 +74,24 @@ const result3 = parseModule(
       (format (units 2) (units_format 1) (precision 4))
       (style (thickness 0.3) (arrow_length 1.27) (text_position_mode 0) (extension_height 0.58642) (extension_offset 0) keep_text_aligned)
     )
+    (footprint "Socket_Arduino_Uno:Socket_Strip_Arduino_1x08"
+      (layer "F.Cu")
+      (uuid "00000000-0000-0000-0000-0000551af9ea")
+      (at 138.938 123.825)
+      (descr "Through hole socket strip")
+      (tags "socket strip")
+      (property "Reference" "P1"
+        (at 8.89 -2.54 0)
+        (layer "F.SilkS")
+        (uuid "7db4c00d-00ed-4cce-8efc-650f5e3d7ed3")
+        (effects
+          (font
+            (size 1 1)
+            (thickness 0.15)
+          )
+        )
+      )
+    )
   )`,
   "long",
   { startRule: "board" },

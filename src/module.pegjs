@@ -717,6 +717,7 @@ module_contents
     / pad
     / model
     / zone
+    / uuid
     / net_tie_pad_groups
     / private_layers
     / dimensions

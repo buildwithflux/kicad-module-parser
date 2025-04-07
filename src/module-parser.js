@@ -9963,13 +9963,16 @@ function peg$parse(input, options) {
                                                         if (s0 === peg$FAILED) {
                                                           s0 = peg$parsezone();
                                                           if (s0 === peg$FAILED) {
-                                                            s0 = peg$parsenet_tie_pad_groups();
+                                                            s0 = peg$parseuuid();
                                                             if (s0 === peg$FAILED) {
-                                                              s0 = peg$parseprivate_layers();
+                                                              s0 = peg$parsenet_tie_pad_groups();
                                                               if (s0 === peg$FAILED) {
-                                                                s0 = peg$parsedimensions();
+                                                                s0 = peg$parseprivate_layers();
                                                                 if (s0 === peg$FAILED) {
-                                                                  s0 = peg$parsegroup();
+                                                                  s0 = peg$parsedimensions();
+                                                                  if (s0 === peg$FAILED) {
+                                                                    s0 = peg$parsegroup();
+                                                                  }
                                                                 }
                                                               }
                                                             }
