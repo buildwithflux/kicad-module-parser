@@ -347,14 +347,23 @@ NET_CLASS_BOARDUNIT
 dimension /* parseDIMENSION() */
  =  "(" _
         type:"dimension" _
-        dimension: number _
-        width: width _
-        options: ( (layer / tstamp / gr_text / dimension_xy) _ )*")"{
+        dimension:number? _
+        options: ((
+          dimension_type
+            / layer
+            / pts
+            / height
+            / width
+            / tstamp
+            / gr_text
+            / dimension_xy
+            / format
+            / style
+        ) _ )* ")" {
     return {
         type ,
         value: [
-            { type: "dimension", value: dimension },
-            width,
+            ...(dimension ? [{ type: "dimension", value: dimension }] : []),
             ...options.map(x => x[0])
         ],
     }
@@ -415,8 +424,8 @@ via_param
 }
 
 polygon=
-   "(" _ type:("polygon"/"filled_polygon") _ value: pts _ ")"  {
-       return { type, value: [ value ] }
+   "(" _ type:("polygon"/"filled_polygon") _ value:(v:(pts/layer) _ { return v })* ")" {
+       return { type, value }
    }
 
 zone  /* parseZONE_CONTAINER */
@@ -1455,12 +1464,13 @@ dimensions
         options:((dimension_type
                      / layer
                      / uuid
+                     / tstamp
                      / pts
                      / height
                      / gr_text
                      / format
                      / style) _)*
-        ")" {
+        _")" {
         return {
             type,
             value: options.map(x => x[0]) // Only return the actual parsed attributes
@@ -1703,7 +1713,7 @@ number_
         { return value }
 
 Real
-  = val:$((digits("."(digits?)?)?) / "." digits) {
+  = val:$(digits("."(digits?)?)? / "." digits) {
       return { type:"real", value:val }
   }
 
