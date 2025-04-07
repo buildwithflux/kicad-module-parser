@@ -1694,7 +1694,7 @@ Newline = "\r\n" / "\n" / "\r"
 
 // <number>::= [<sign>] [<positive_integer> | <real> | <fraction>]
 number
-    = val:$([-+]?  (Exponential/Real/Fraction/digits)) {
+    = val:$([-+]? (Exponential/Real/Fraction/digits)) {
         return { type:"number", value:val }
     }
 
@@ -1703,13 +1703,13 @@ number_
         { return value }
 
 Real
-  = val:$((digits("."(digits?))?) / "." digits) {
+  = val:$((digits("."(digits?)?)?) / "." digits) {
       return { type:"real", value:val }
   }
 
 // e.g. -.6e-3
 Exponential
-    = val:$((digits "." digits?/digits? "." digits) [eE] [+-]? digits) {
+    = val:$([-+]? Real [eE] [+-]? digits) {
       return { type:"exponential", value:val }
     }
 
