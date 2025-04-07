@@ -60,11 +60,11 @@ general_array_opt
     ")" _ {return {type, value}}
 
 
-paper /* parsePAGE_INFO */
+paper /* see https://docs.kicad.org/doxygen/classPAGE__INFO.html */
  =  "(" _
         ("page"/"paper") _
         ('"'/'"')? _
-        size:("A0"/"A1"/"A2"/"A3"/"A4"/"A5"/"A"/"B"/"C"/"D") _
+        size:("A0"/"A1"/"A2"/"A3"/"A4"/"A5"/"A"/"B"/"C"/"D"/"E"/"GERBER"/"USLetter"/"USLegal"/"USLedger"/"User") _
         ('"'/'"')? _
         portrait:("portrait" _ )?
         ")" {
@@ -270,6 +270,7 @@ PCBPLOTPARAMS_NUMERIC
  / "svgprecision"
  / "dashed_line_dash_ratio"
  / "dashed_line_gap_ratio"
+ / "gerberprecision"
 
 pcbplotparams_flag
     = "(" _ type:PCBPLOTPARAMS_FLAG _ value:pcbplotparams_bool _ ")" { return { type, value } }
