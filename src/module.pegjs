@@ -1521,7 +1521,7 @@ dimensions
         };
     }
 
-dimension_type = "(" _ type:"type" _ value:("aligned" / "leader") _ ")" {
+dimension_type = "(" _ type:"type" _ value:("aligned" / "leader" / "center") _ ")" {
     return { type: "dimension_type", value: { type: "string", value } }
 }
 

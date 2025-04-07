@@ -18076,6 +18076,15 @@ function peg$parse(input, options) {
                 s5 = peg$FAILED;
                 if (peg$silentFails === 0) { peg$fail(peg$c785); }
               }
+              if (s5 === peg$FAILED) {
+                if (input.substr(peg$currPos, 6) === peg$c771) {
+                  s5 = peg$c771;
+                  peg$currPos += 6;
+                } else {
+                  s5 = peg$FAILED;
+                  if (peg$silentFails === 0) { peg$fail(peg$c772); }
+                }
+              }
             }
             if (s5 !== peg$FAILED) {
               s6 = peg$parse_();
