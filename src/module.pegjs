@@ -1067,6 +1067,8 @@ pad_attr
     / uuid
     / remove_unused_layers
     / keep_end_layers
+    / pintype
+    / pinfunction
     / pad_property;
 
 chamfer
@@ -1137,6 +1139,23 @@ rect_delta
                     ]
                 }
     }
+
+pintype
+    = "(" _
+      type:"pintype" _
+      value:string _
+    ")" {
+      return { type, value }
+    }
+
+pinfunction
+    = "(" _
+      type:"pinfunction" _
+      value:string _
+    ")" {
+      return { type, value }
+    }
+
 
 // --------------------------------------------------
 // drill
