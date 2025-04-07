@@ -134,6 +134,7 @@ if (gr_text !== "57,500 mm") {
 const result5 = parseModule(
   `(kicad_pcb (version 20211014) (generator pcbnew)
 
+    (page User 210.007 148.006)
     (footprint "ABC" (layer "F.Cu")
       (zone (net 2) (net_name "GND") (layer "F.Cu") (tstamp 00000000-0000-0000-0000-00005884c6ba) (hatch edge 0.508)
         (filled_polygon

@@ -60,20 +60,27 @@ general_array_opt
     ")" _ {return {type, value}}
 
 
-paper /* see https://docs.kicad.org/doxygen/classPAGE__INFO.html */
- =  "(" _
-        ("page"/"paper") _
-        ('"'/'"')? _
-        size:("A0"/"A1"/"A2"/"A3"/"A4"/"A5"/"A"/"B"/"C"/"D"/"E"/"GERBER"/"USLetter"/"USLegal"/"USLedger"/"User") _
-        ('"'/'"')? _
-        portrait:("portrait" _ )?
-        ")" {
-        const value = [
-            { type: "size", value: {type: "string", value: size } },
-            { type: "portrait", value: { type: "boolean", value: !!portrait } }
-        ]
-    return {type: "page", value}
- }
+paper /* see https://docs.kicad.org/doxygen/classPAGE__INFO.html and https://docs.kicad.org/doxygen/page__info_8cpp_source.html#l00121 */
+  = "(" _
+    ("page"/"paper") _
+    ('"'/'"')? _
+    size:("A0"/"A1"/"A2"/"A3"/"A4"/"A5"/"A"/"B"/"C"/"D"/"E"/"GERBER"/"USLetter"/"USLegal"/"USLedger"/"User") _
+    ('"'/'"')? _
+    options:(("portrait"/number) _)*
+    ")" {
+      const isPortrait = options.includes("portrait");
+      const custom_width = options.filter(x => typeof x === "number")[0];
+      const custom_height = options.filter(x => typeof x === "number")[1];
+
+      const value = [
+          { type: "size", value: {type: "string", value: size } },
+          ...(size === "User" && custom_width ? [{ type: "custom_width", value: {type: number, value: custom_width }}] : []),
+          ...(size === "User" && custom_height ? [{ type: "custom_height", value: {type: number, value: custom_height }}] : []),
+          { type: "portrait", value: { type: "boolean", value: isPortrait } }
+      ]
+
+      return {type: "page", value}
+    }
 
 title_block /* parseTITLE_BLOCK */
  =  "(" _
