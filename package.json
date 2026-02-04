@@ -35,18 +35,19 @@
     "test:parse": "tsx test/parse-test.ts"
   },
   "devDependencies": {
-    "@types/argparse": "2.0.10",
-    "@types/fs-extra": "9.0.1",
-    "@types/js-yaml": "4.0.2",
-    "@types/klaw": "3.0.1",
-    "@types/through2": "2.0.36",
+        "@types/argparse": "2.0.10",
+        "@types/fs-extra": "9.0.1",
+        "@types/js-yaml": "4.0.2",
+        "@types/klaw": "3.0.1",
+        "@types/node": "25.2.0",
+        "@types/through2": "2.0.36",
     "npm-run-all": "4.1.5",
     "pegjs": "0.10.0",
     "prettier": "3.2.5",
     "prettier-plugin-pegjs": "2.0.2",
     "tsup": "8.3.5",
     "tsx": "4.19.1",
-    "typescript": "5.6.2"
+    "typescript": "5.9.2"
   },
   "dependencies": {
     "ajv": "8.6.2",
