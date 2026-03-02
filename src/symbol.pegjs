@@ -4,12 +4,12 @@ kicad_symbol_lib
     type:"kicad_symbol_lib"
     _
     value:(
-      val:(version / generator / generator_version / embedded_fonts / kicad_symbol) _ {
+      val:(version / generator / generator_version / embedded_fonts / kicad_symbol / unknown_sexp) _ {
           return val;
         }
     )*
     ")"
-    _ { return { type, value }; }
+    _ { return { type, value: value.filter(function(v) { return v !== null; }) }; }
 
 version
   = "(" _ type:"version" _ value:digits _ ")" {
@@ -28,12 +28,12 @@ generator_version
 
 embedded_fonts
   = "(" _ type:"embedded_fonts" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 kicad_symbol
   = "(" _ type:"symbol" _ rest:kicad_symbol_element+ ")" {
-      return { type, value: rest };
+      return { type, value: rest.filter(function(v) { return v !== null; }) };
     }
 
 kicad_symbol_element
@@ -59,12 +59,13 @@ kicad_symbol_element
       / text
       / property
       / kicad_symbol
+      / unknown_sexp
     )
     _ { return value; }
 
 exclude_from_sim
   = "(" _ type:"exclude_from_sim" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 library_id = value:string { return { type: "id", value }; }
@@ -107,22 +108,22 @@ offset = "(" _ type:"offset" _ value:number _ ")" { return { type, value }; }
 
 in_bom
   = "(" _ type:"in_bom" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 on_board
   = "(" _ type:"on_board" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 in_pos_files
   = "(" _ type:"in_pos_files" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 duplicate_pin_numbers_are_jumpers
   = "(" _ type:"duplicate_pin_numbers_are_jumpers" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 body_styles
@@ -139,14 +140,14 @@ property
     _
     value:string
     _
-    rest:(val:(at / effects / property_id / show_name / do_not_autoplace / hide) _ { return val; })+
+    rest:(val:(at / effects / property_id / show_name / do_not_autoplace / hide / unknown_sexp) _ { return val; })+
     ")" {
       return {
         type: "properties",
         value: [
           { type: "key", value: name },
           { type: "value", value },
-          ...rest,
+          ...rest.filter(function(v) { return v !== null; }),
         ],
       };
     }
@@ -155,12 +156,12 @@ property_id = "(" _ "id" _ value:number _ ")" { return { type: "id", value }; }
 
 show_name
   = "(" _ type:"show_name" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 do_not_autoplace
   = "(" _ type:"do_not_autoplace" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 graphic_item
@@ -316,11 +317,12 @@ pin
           / hide_token
           / pin_name
           / pin_number
+          / unknown_sexp
         )
         _ { return val; }
     )+
     ")"
-    _ { return { type: "pin", value: rest }; }
+    _ { return { type: "pin", value: rest.filter(function(v) { return v !== null; }) }; }
 
 pin_electrical_type
   = value:(
@@ -419,8 +421,8 @@ stroke_definition
     _
     type:"stroke"
     _
-    rest:(val:(width / stroke_type / color) _ { return val; })*
-    ")" { return { type, value: rest }; }
+    rest:(val:(width / stroke_type / color / unknown_sexp) _ { return val; })*
+    ")" { return { type, value: rest.filter(function(v) { return v !== null; }) }; }
 
 width = "(" _ type:"width" _ value:number _ ")" { return { type, value }; }
 
@@ -452,8 +454,8 @@ fill
     }
 
 effects
-  = "(" _ type:"effects" _ effects:((font / justify / hide / hide_token) _)* ")" {
-      return { type, value: effects.map((x) => x[0]) };
+  = "(" _ type:"effects" _ effects:((font / justify / hide / hide_token / unknown_sexp) _)* ")" {
+      return { type, value: effects.map((x) => x[0]).filter(function(v) { return v !== null; }) };
     }
 
 font
@@ -462,12 +464,12 @@ font
     type:"font"
     _
     attrs:(
-      (face / size / thickness / bold / italic / bold_token / italic_token) _
+      (face / size / thickness / bold / italic / bold_token / italic_token / unknown_sexp) _
     )*
     ")" {
       return {
         type,
-        value: attrs.map((x) => x[0]),
+        value: attrs.map((x) => x[0]).filter(function(v) { return v !== null; }),
       };
     }
 
@@ -567,6 +569,18 @@ Fraction = n:digits "/" d:digits { return { type: "fraction", n: n, d: d }; }
 digits = $[0-9]+
 
 symbol = value:$[^ ();'\n]+ { return { type: "string", value }; }
+
+// Catch-all rule: skip any unknown S-expression so that future KiCad
+// versions with new fields do not break the parser.  The rule matches
+// a balanced parenthesised form and returns null so callers can filter
+// it out.
+unknown_sexp
+  = "(" balanced_content* ")" { return null; }
+
+balanced_content
+  = "(" balanced_content* ")"    // nested parens
+  / string                        // quoted strings (may contain parens)
+  / [^()]+                        // any non-paren characters
 
 _ "whitespace" = [ \t\n\r]*
 
