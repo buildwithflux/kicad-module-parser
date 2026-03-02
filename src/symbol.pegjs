@@ -28,7 +28,7 @@ generator_version
 
 embedded_fonts
   = "(" _ type:"embedded_fonts" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 kicad_symbol
@@ -117,12 +117,12 @@ on_board
 
 in_pos_files
   = "(" _ type:"in_pos_files" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 duplicate_pin_numbers_are_jumpers
   = "(" _ type:"duplicate_pin_numbers_are_jumpers" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 body_styles
@@ -155,12 +155,12 @@ property_id = "(" _ "id" _ value:number _ ")" { return { type: "id", value }; }
 
 show_name
   = "(" _ type:"show_name" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 do_not_autoplace
   = "(" _ type:"do_not_autoplace" _ value:bool _ ")" {
-      return { type, value: { type: "boolean", value: value === "yes" } };
+      return { type, value };
     }
 
 graphic_item
