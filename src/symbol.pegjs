@@ -4,7 +4,7 @@ kicad_symbol_lib
     type:"kicad_symbol_lib"
     _
     value:(
-      val:(version / generator / generator_version / kicad_symbol) _ {
+      val:(version / generator / generator_version / embedded_fonts / kicad_symbol) _ {
           return val;
         }
     )*
@@ -26,6 +26,11 @@ generator_version
       return { type, value };
     }
 
+embedded_fonts
+  = "(" _ type:"embedded_fonts" _ value:bool _ ")" {
+      return { type, value: { type: "boolean", value: value === "yes" } };
+    }
+
 kicad_symbol
   = "(" _ type:"symbol" _ rest:kicad_symbol_element+ ")" {
       return { type, value: rest };
@@ -41,6 +46,11 @@ kicad_symbol_element
       / exclude_from_sim
       / in_bom
       / on_board
+      / in_pos_files
+      / duplicate_pin_numbers_are_jumpers
+      / body_styles
+      / embedded_fonts
+      / unit_name
       / pin
       / rectangle
       / circle
@@ -105,6 +115,21 @@ on_board
       return { type, value: { type: "boolean", value: value === "yes" } };
     }
 
+in_pos_files
+  = "(" _ type:"in_pos_files" _ value:bool _ ")" {
+      return { type, value: { type: "boolean", value: value === "yes" } };
+    }
+
+duplicate_pin_numbers_are_jumpers
+  = "(" _ type:"duplicate_pin_numbers_are_jumpers" _ value:bool _ ")" {
+      return { type, value: { type: "boolean", value: value === "yes" } };
+    }
+
+body_styles
+  = "(" _ type:"body_styles" _ value:symbol _ ")" {
+      return { type, value };
+    }
+
 property
   = "("
     _
@@ -114,7 +139,7 @@ property
     _
     value:string
     _
-    rest:(val:(at / effects / property_id) _ { return val; })+
+    rest:(val:(at / effects / property_id / show_name / do_not_autoplace / hide) _ { return val; })+
     ")" {
       return {
         type: "properties",
@@ -127,6 +152,16 @@ property
     }
 
 property_id = "(" _ "id" _ value:number _ ")" { return { type: "id", value }; }
+
+show_name
+  = "(" _ type:"show_name" _ value:bool _ ")" {
+      return { type, value: { type: "boolean", value: value === "yes" } };
+    }
+
+do_not_autoplace
+  = "(" _ type:"do_not_autoplace" _ value:bool _ ")" {
+      return { type, value: { type: "boolean", value: value === "yes" } };
+    }
 
 graphic_item
   = arc
@@ -344,7 +379,7 @@ alternate
     _
     type:"alternate"
     _
-    name:symbol
+    name:(string / symbol)
     _
     rest:(val:(pin_graphic_style / pin_electrical_type) _ { return val; })+
     ")"
@@ -352,7 +387,10 @@ alternate
 
 length = "(" _ type:"length" _ value:number _ ")" { return { type, value }; }
 
-unit_name = _ "(" _ "unit_name" _ string _ ")" _
+unit_name
+  = "(" _ type:"unit_name" _ value:string _ ")" {
+      return { type, value };
+    }
 
 at
   = "("
