@@ -681,7 +681,7 @@ module  /* parseMODULE_unchecked */
             type: "module",
             value: [
                 {type: "name", value},
-                ...contents.map(x=>x[0])
+                ...contents.map(x=>x[0]).filter(function(v) { return v !== null; })
             ]
         }
     }
@@ -1101,7 +1101,7 @@ pad
             { type: "pad_id", value: no },
             pad_type,
             shape,
-            ...attrs.map(x => x[0])
+            ...attrs.map(x => x[0]).filter(function(v) { return v !== null; })
         ]
 
         if (typeof locked !== "undefined") values.push(locked)
