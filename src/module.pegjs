@@ -28,9 +28,10 @@ board /* parseBOARD_unchecked */
         group /
         zone /
         target /
-        dimension) _ {return val})*
+        dimension /
+        unknown_sexp) _ {return val})*
     ")" _ {
-        return {type, value: rest}
+        return {type, value: rest.filter(function(v) { return v !== null; })}
 };
 
 
@@ -680,7 +681,7 @@ module  /* parseMODULE_unchecked */
             type: "module",
             value: [
                 {type: "name", value},
-                ...contents.map(x=>x[0])
+                ...contents.map(x=>x[0]).filter(function(v) { return v !== null; })
             ]
         }
     }
@@ -721,7 +722,9 @@ module_contents
     / net_tie_pad_groups
     / private_layers
     / dimensions
-    / group;
+    / group
+    / duplicate_pad_numbers_are_jumpers
+    / unknown_sexp;
 
 
 locked  = "locked" { return { type: "locked", value: { type: "boolean", value: true }  }}
@@ -790,15 +793,15 @@ tstamp = "(" _ "tstamp" _  tstamp:(string/symbol) _ ")" { // TODO: (string/symbo
 // ------------------------------
 
 effects
-    = "(" _ type:"effects" _ effects:((font / justify / hide) _ )*  ")" {
-        return { type, value: effects.map(x => x[0]) }
+    = "(" _ type:"effects" _ effects:((font / justify / hide / unknown_sexp) _ )*  ")" {
+        return { type, value: effects.map(x => x[0]).filter(function(v) { return v !== null; }) }
     }
 
 font
-    = "(" _ type:"font" _ attrs:(( face/size/thickness/bold_prop/bold/italic_prop/italic) _ )* _ ")" {
+    = "(" _ type:"font" _ attrs:(( face/size/thickness/bold_prop/bold/italic_prop/italic/unknown_sexp) _ )* _ ")" {
         return {
             type,
-            value: attrs.map(x => x[0])
+            value: attrs.map(x => x[0]).filter(function(v) { return v !== null; })
         }
     }
 
@@ -845,6 +848,11 @@ border
 
 embedded_fonts
     = "(" _ type:"embedded_fonts" _ value:("yes" / "no") _ ")" {
+        return { type, value:{ type: "boolean", value: value === "yes" } }
+    }
+
+duplicate_pad_numbers_are_jumpers
+    = "(" _ type:"duplicate_pad_numbers_are_jumpers" _ value:("yes" / "no") _ ")" {
         return { type, value:{ type: "boolean", value: value === "yes" } }
     }
 
@@ -947,14 +955,14 @@ module_property
             "property" _
             key:string _
             value:string _
-            attrs:((at/layer/uuid/effects/unlocked/hide_prop) _)*
+            attrs:((at/layer/uuid/effects/unlocked/hide_prop/unknown_sexp) _)*
             ")" {
             return  {
                 type: "module_property",
                 value: [
                     { type: "key", value: key },
                     { type: "value", value },
-                    ...attrs.map(x => x[0])
+                    ...attrs.map(x => x[0]).filter(function(v) { return v !== null; })
                 ]
             }
 }
@@ -971,7 +979,7 @@ fp_text
         text_type:("reference"/"value"/"user") _
         value:(string/symbol/number) _
         at:at? _
-        attrs:((layer/hide/effects/tstamp/uuid/unlocked/hide_prop) _)*
+        attrs:((layer/hide/effects/tstamp/uuid/unlocked/hide_prop/unknown_sexp) _)*
         ")" {
         return {
             type,
@@ -985,7 +993,7 @@ fp_text
                         }
                     },
                  at,
-                 ...attrs.map(x => x[0])
+                 ...attrs.map(x => x[0]).filter(function(v) { return v !== null; })
                  ]
         }
     }
@@ -996,7 +1004,7 @@ fp_text_box
         value:(string/symbol/number) _
         start:start _
         end:end _
-        attrs:((layer/hide/effects/tstamp/uuid/unlocked/border/stroke/hide_prop/margins) _)*
+        attrs:((layer/hide/effects/tstamp/uuid/unlocked/border/stroke/hide_prop/margins/unknown_sexp) _)*
         ")" {
         return {
             type,
@@ -1004,7 +1012,7 @@ fp_text_box
                 {type:"text", value},
                  start,
                  end,
-                 ...attrs.map(x => x[0])
+                 ...attrs.map(x => x[0]).filter(function(v) { return v !== null; })
                  ]
         }
     }
@@ -1072,8 +1080,8 @@ fp_poly
     }
 
 fp_generics
-    = generics:(( stroke / layer / width / fill / tstamp / status / uuid / unlocked ) _ )* {
-        return generics.map(x => x[0])
+    = generics:(( stroke / layer / width / fill / tstamp / status / uuid / unlocked / unknown_sexp ) _ )* {
+        return generics.map(x => x[0]).filter(function(v) { return v !== null; })
     }
 
 // --------------------------------------------------
@@ -1093,7 +1101,7 @@ pad
             { type: "pad_id", value: no },
             pad_type,
             shape,
-            ...attrs.map(x => x[0])
+            ...attrs.map(x => x[0]).filter(function(v) { return v !== null; })
         ]
 
         if (typeof locked !== "undefined") values.push(locked)
@@ -1137,7 +1145,8 @@ pad_attr
     / keep_end_layers
     / pintype
     / pinfunction
-    / pad_property;
+    / pad_property
+    / unknown_sexp;
 
 chamfer
  = "(" _
@@ -1419,8 +1428,8 @@ gr_text
 }
 
 gr_generics
-    = generics:( ( stroke / angle /layer / width / fill / tstamp / status / uuid )_)* {
-        return generics.map(x => x[0])
+    = generics:( ( stroke / angle /layer / width / fill / tstamp / status / uuid / unknown_sexp )_)* {
+        return generics.map(x => x[0]).filter(function(v) { return v !== null; })
     }
 
 render_cache = "(" _ type:"render_cache" _ key:string _ ttl:number _ contents:(polygon _)* _ ")" {
@@ -1768,6 +1777,18 @@ sexp
          value: contents.map(x => x[0])
        }
  }
+
+// Catch-all rule: skip any unknown S-expression so that future KiCad
+// versions with new fields do not break the parser.  The rule matches
+// a balanced parenthesised form and returns null so callers can filter
+// it out.
+unknown_sexp
+  = "(" balanced_content* ")" { return null; }
+
+balanced_content
+  = "(" balanced_content* ")"    // nested parens
+  / string                        // quoted strings (may contain parens)
+  / [^()"']+                        // any non-paren, non-quote characters
 
 expression = number / string / array / symbol / sexp / hex
 
