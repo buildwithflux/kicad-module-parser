@@ -1568,8 +1568,8 @@ function peg$parse(input, options) {
              }
        },
       peg$c913 = function() { return null; },
-      peg$c914 = /^[^()]/,
-      peg$c915 = peg$classExpectation(["(", ")"], true, false),
+      peg$c914 = /^[^()"']/,
+      peg$c915 = peg$classExpectation(["(", ")", "\"", "'"], true, false),
       peg$c916 = "[",
       peg$c917 = peg$literalExpectation("[", false),
       peg$c918 = ",",

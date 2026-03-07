@@ -697,7 +697,7 @@ var require_module_parser = __commonJS({
         };
       }, peg$c913 = function() {
         return null;
-      }, peg$c914 = /^[^()]/, peg$c915 = peg$classExpectation(["(", ")"], true, false), peg$c916 = "[", peg$c917 = peg$literalExpectation("[", false), peg$c918 = ",", peg$c919 = peg$literalExpectation(",", false), peg$c920 = "]", peg$c921 = peg$literalExpectation("]", false), peg$c922 = function(value, values) {
+      }, peg$c914 = /^[^()"']/, peg$c915 = peg$classExpectation(["(", ")", '"', "'"], true, false), peg$c916 = "[", peg$c917 = peg$literalExpectation("[", false), peg$c918 = ",", peg$c919 = peg$literalExpectation(",", false), peg$c920 = "]", peg$c921 = peg$literalExpectation("]", false), peg$c922 = function(value, values) {
         return {
           type: "array",
           value: [value, ...values.map((x) => x[0])]

@@ -1788,7 +1788,7 @@ unknown_sexp
 balanced_content
   = "(" balanced_content* ")"    // nested parens
   / string                        // quoted strings (may contain parens)
-  / [^()]+                        // any non-paren characters
+  / [^()"']+                        // any non-paren, non-quote characters
 
 expression = number / string / array / symbol / sexp / hex
 
